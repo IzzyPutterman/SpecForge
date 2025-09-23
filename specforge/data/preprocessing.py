@@ -429,10 +429,23 @@ class OfflineEagle3Dataset(torch.utils.data.Dataset):
         self.max_len = max_len
 
     def __len__(self):
-        return len(self.datapaths)
+        return len(self.datapaths) * 20
 
     def _open_file(self, index):
-        return torch.load(self.datapaths[index], weights_only=False)
+        file_idx = index // 20
+        while True:
+            try:
+                data = torch.load(self.datapaths[file_idx], weights_only=False)
+                break
+            except Exception as e:
+                print(f"Error loading file {self.datapaths[file_idx]}: {e}")
+                print(f"File index: {file_idx}")
+                print(f"File path: {self.datapaths[file_idx]}")
+                print(f"File exists: {os.path.exists(self.datapaths[file_idx])}")
+                print(f"File size: {os.path.getsize(self.datapaths[file_idx])}")
+                file_idx = (file_idx + 1) % len(self.datapaths)
+        data_idx = min(index % 20, len(data) - 1)
+        return data[data_idx]
 
     def __getitem__(self, index):
         try:
@@ -444,17 +457,20 @@ class OfflineEagle3Dataset(torch.utils.data.Dataset):
         new_data = {}
 
         # Squeeze due to our data generation script adding a batch dimension
-        hidden_state = data["aux_hidden_state"].squeeze(0)[: self.max_len][None, :]
-        target = data["hidden_state"].squeeze(0)[: self.max_len][None, :]
+        # hidden_state = data["aux_hidden_state"].squeeze(0)[: self.max_len][None, :]
+        target = data["hidden_state"][: self.max_len][None, :]
 
         input_ids = data["input_ids"][: self.max_len][None, :]
-        loss_mask = data["loss_mask"][: self.max_len][None, :]
+        loss_mask = torch.zeros_like(data['input_ids'][: self.max_len], dtype=torch.long)
+        start_assistant = ((data['input_ids'] == 78191).nonzero(as_tuple=True)[0])
+        loss_mask[start_assistant[0]:self.max_len] = 1
+        loss_mask = loss_mask[None, :]
         loss_mask[0, -1] = 0
 
         new_data["attention_mask"] = torch.ones_like(loss_mask, dtype=torch.long)
         new_data["loss_mask"] = loss_mask
         new_data["target"] = padding(target, left=False)
-        new_data["hidden_state"] = hidden_state
+        new_data["hidden_state"] = target
         new_data["input_ids"] = padding(input_ids, left=False)
         if self.transform:
             new_data = self.transform(new_data)

@@ -801,14 +801,14 @@ class LlamaForCausalLMEagle3(Eagle3DraftModel):
         )
         self.midlayer = LlamaDecoderLayer(config, attention_backend=attention_backend)
 
-        if hasattr(config, "target_hidden_size"):
-            self.fc = torch.nn.Linear(
-                config.target_hidden_size * 3, config.hidden_size, bias=False
-            )
-        else:
-            self.fc = torch.nn.Linear(
-                config.hidden_size * 3, config.hidden_size, bias=False
-            )
+        # if hasattr(config, "target_hidden_size"):
+        #     self.fc = torch.nn.Linear(
+        #         config.target_hidden_size * 3, config.hidden_size, bias=False
+        #     )
+        # else:
+        #     self.fc = torch.nn.Linear(
+        #         config.hidden_size * 3, config.hidden_size, bias=False
+        #     )
 
         self.norm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.lm_head = nn.Linear(
@@ -860,7 +860,7 @@ class LlamaForCausalLMEagle3(Eagle3DraftModel):
         )
 
         # fc
-        hidden_states = self.fc(hidden_states)
+        # hidden_states = self.fc(hidden_states)
         hidden_states = self.midlayer(
             input_emb=inputs_embeds,
             hidden_states=hidden_states,
@@ -882,8 +882,9 @@ class LlamaForCausalLMEagle3(Eagle3DraftModel):
 
     def project_hidden_states(self, hidden_states: torch.Tensor) -> torch.Tensor:
         # eagle 3 requires hidden states from 3 layers
-        assert hidden_states.size(-1) == self.config.hidden_size * 3
-        return self.fc(hidden_states)
+        pass
+        # assert hidden_states.size(-1) == self.config.hidden_size * 3
+        # return self.fc(hidden_states)
 
     def compute_logits(self, hidden_states: torch.Tensor) -> torch.Tensor:
         norm_hidden_states = self.norm(hidden_states)
