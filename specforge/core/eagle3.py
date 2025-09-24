@@ -772,10 +772,11 @@ def _compute_target_p_padded(target, t2d, loss_mask, length):
 def _compute_target_p(target, t2d, loss_mask):
     target_head = target
     target_max_token = target_head.argmax(-1)
-    target_mask = t2d[target_max_token]
-    target_mask = target_mask[..., None].int()
-    position_mask = target_mask * loss_mask
-    target_head = target_head[..., t2d]
+    # target_mask = t2d[target_max_token]
+    # target_mask = target_mask[..., None].int()
+    # position_mask = target_mask * loss_mask
+    position_mask = loss_mask
+    # target_head = target_head[..., t2d]
     target_head = target_head.float()
     target_p = nn.Softmax(dim=2)(target_head)
     target_p = target_p.detach()

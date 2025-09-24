@@ -816,10 +816,12 @@ class LlamaForCausalLMEagle3(Eagle3DraftModel):
         )
 
         # create vocab buffers
-        t2d = torch.zeros(self.vocab_size, dtype=torch.bool)
-        d2t = torch.zeros(self.draft_vocab_size, dtype=torch.int64)
-        self.register_buffer("t2d", t2d)
-        self.register_buffer("d2t", d2t)
+        self.t2d = None
+        self.d2t = None
+        # t2d = torch.zeros(self.vocab_size, dtype=torch.bool)
+        # d2t = torch.zeros(self.draft_vocab_size, dtype=torch.int64)
+        # self.register_buffer("t2d", t2d)
+        # self.register_buffer("d2t", d2t)
 
     def forward(
         self,
@@ -882,7 +884,7 @@ class LlamaForCausalLMEagle3(Eagle3DraftModel):
 
     def project_hidden_states(self, hidden_states: torch.Tensor) -> torch.Tensor:
         # eagle 3 requires hidden states from 3 layers
-        pass
+        return hidden_states
         # assert hidden_states.size(-1) == self.config.hidden_size * 3
         # return self.fc(hidden_states)
 

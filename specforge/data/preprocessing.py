@@ -25,6 +25,7 @@ import re
 import warnings
 from collections import Counter
 from typing import Dict, List, Optional, Tuple, Union
+import copy
 
 import torch
 from datasets import Dataset as HFDataset
@@ -410,7 +411,7 @@ def build_eagle3_dataset(
 # Offline Eagle3 Dataset
 # ==============================
 # modified from https://github.com/NickL77/BaldEagle/blob/master/train/modules/data/data.py
-def list_local_files(path, suffixes=[".ckpt"]):
+def list_local_files(path, suffixes=[".pt"]):
     datapaths = []
     for root, directories, files in os.walk(path):
         for file in files:
@@ -470,7 +471,7 @@ class OfflineEagle3Dataset(torch.utils.data.Dataset):
         new_data["attention_mask"] = torch.ones_like(loss_mask, dtype=torch.long)
         new_data["loss_mask"] = loss_mask
         new_data["target"] = padding(target, left=False)
-        new_data["hidden_state"] = target
+        new_data["hidden_state"] = copy.deepcopy(target)
         new_data["input_ids"] = padding(input_ids, left=False)
         if self.transform:
             new_data = self.transform(new_data)

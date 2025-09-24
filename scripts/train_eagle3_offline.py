@@ -270,23 +270,23 @@ def main():
     cache_key = hashlib.md5(cache_params_string.encode()).hexdigest()
     train_dataset = load_dataset("json", data_files=args.train_data_path)["train"]
     with rank_0_priority():
-        train_eagle3_dataset_tmp = build_eagle3_dataset(
-            dataset=train_dataset,
-            tokenizer=tokenizer,
-            chat_template=args.chat_template,
-            is_preformatted=args.is_preformatted,
-            max_length=args.max_length,
-            cache_dir=os.path.join(args.cache_dir, "processed_dataset"),
-            cache_key=cache_key,
-            num_proc=args.build_dataset_num_proc,
-        )
-        vocab_mapping_path = generate_vocab_mapping_file(
-            dataset=train_eagle3_dataset_tmp,
-            target_vocab_size=draft_model_config.vocab_size,
-            draft_vocab_size=draft_model_config.draft_vocab_size,
-            cache_dir=os.path.join(args.cache_dir, "vocab_mapping"),
-            cache_key=cache_key,
-        )
+        # train_eagle3_dataset_tmp = build_eagle3_dataset(
+        #     dataset=train_dataset,
+        #     tokenizer=tokenizer,
+        #     chat_template=args.chat_template,
+        #     is_preformatted=args.is_preformatted,
+        #     max_length=args.max_length,
+        #     cache_dir=os.path.join(args.cache_dir, "processed_dataset"),
+        #     cache_key=cache_key,
+        #     num_proc=args.build_dataset_num_proc,
+        # )
+        # vocab_mapping_path = generate_vocab_mapping_file(
+        #     dataset=train_eagle3_dataset_tmp,
+        #     target_vocab_size=draft_model_config.vocab_size,
+        #     draft_vocab_size=draft_model_config.draft_vocab_size,
+        #     cache_dir=os.path.join(args.cache_dir, "vocab_mapping"),
+        #     cache_key=cache_key,
+        # )
         train_eagle3_dataset = build_offline_eagle3_dataset(
             args.train_hidden_states_path,
             args.max_length,
@@ -315,7 +315,7 @@ def main():
         print_with_rank(f"Using provided total_steps: {args.total_steps}")
 
     # we load the vocab mapping then
-    draft_model.load_vocab_mapping(vocab_mapping_path)
+    # draft_model.load_vocab_mapping(vocab_mapping_path)
     print_with_rank("Loaded vocab mapping")
 
     if args.eval_data_path is not None:
@@ -408,6 +408,7 @@ def main():
 
             # if batch_index % args.draft_accumulation_steps == 0:
             #     optimizer.zero_grad()
+
             plosses, _, acces = eagle3_model(
                 input_ids=data["input_ids"].cuda(),  # [B, S]
                 attention_mask=data["attention_mask"].cuda(),  # [B, S]
